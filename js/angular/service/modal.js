@@ -242,7 +242,10 @@ function($rootScope, $ionicBody, $compile, $timeout, $ionicPlatform, $ionicTempl
       }
 
       return $timeout(function() {
-        if (!modalStack.length) {
+        var modalOfTypeExists = modalStack.some(function(modal) {
+          return modal.viewType === self.viewType && modal._isShown;
+        });
+        if (!modalOfTypeExists) {
           $ionicBody.removeClass(self.viewType + '-open');
         }
         self.el.classList.add('hide');
@@ -268,9 +271,15 @@ function($rootScope, $ionicBody, $compile, $timeout, $ionicPlatform, $ionicTempl
       if (self._isShown) {
         promise = self.hide();
       } else {
-        deferred = $$q.defer();
-        deferred.resolve();
-        promise = deferred.promise;
+        promise = $timeout(function() {
+          var modalOfTypeExists = modalStack.some(function(modal) {
+            return modal.viewType === self.viewType && modal._isShown;
+          });
+          if (!modalOfTypeExists) {
+            $ionicBody.removeClass(self.viewType + '-open');
+          }
+          self.el.classList.add('hide');
+        }, self.hideDelay || 320);
       }
 
       return promise.then(function() {
